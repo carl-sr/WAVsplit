@@ -47,8 +47,8 @@ private:
     std::string output_directory;
 
     void read_wav(const std::string &filename);
-    void read_labl(const WAV_t &wav);
-    void read_cue(const WAV_t &wav);
+    void read_labl(WAV_t &wav);
+    void read_cue(WAV_t &wav);
 
     void output_dir_from_filename(const std::string &filename);
 
