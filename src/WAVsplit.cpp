@@ -77,6 +77,10 @@ void WAVsplitter::read_cue(WAV_t &wav)
 
 void WAVsplitter::output_dir_from_filename(const std::string &filename)
 {
+    std::string dir = filename.substr(filename.rfind('/') + 1);
+    dir = dir.substr(0, dir.find('.'));
+
+    set_output_directory(dir);
 }
 
 WAVsplitter::WAVsplitter()
@@ -112,6 +116,11 @@ const std::string &WAVsplitter::get_suffix() const
 
 void WAVsplitter::set_output_directory(const std::string &new_output_directory)
 {
+    output_directory = new_output_directory;
+    if(*output_directory.rbegin() != '/')
+        output_directory.append("/");
+
+    printf("%s\n", output_directory.c_str());
 }
 
 const std::string &WAVsplitter::get_output_directory() const
