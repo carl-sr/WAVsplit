@@ -8,11 +8,13 @@
 
 struct splitWAV
 {
+    std::string file_name;
+    uint32_t byte_offset;
+    uint32_t byte_length;
     WAV_t wav;
-    std::string fileName;
-    int byteOffset;
-    int byteLength;
 };
+
+
 
 // cue point structs - contain sample offsets for timestamps
 struct cue_point_t
@@ -67,7 +69,7 @@ public:
     void set_output_directory(const std::string &new_output_directory);
     const std::string &get_output_directory() const;
 
-    std::vector<splitWAV> &get_splits() const;
+    std::vector<splitWAV> &get_splits();
 
     void split();
 };

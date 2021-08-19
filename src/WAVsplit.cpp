@@ -6,6 +6,68 @@ void WAVsplitter::read_wav(const std::string &filename)
     wav_header = wav.header;
     read_labl(wav);
     read_cue(wav);
+
+    // create splitWAV structs
+    split_wavs.reserve(cue_chunk.data.size());
+    for (auto &i : cue_chunk.data)
+    {
+        // lookup string name by identifier
+        split_wavs.push_back({labl_identifiers[i.identifier], i.sample_start});
+
+        // assign header data to each WAV_t
+        wav.header = wav_header;
+    }
+
+    // find duplicate cue point names
+    std::unordered_map<std::string, int> names;
+    for (auto &i : split_wavs)
+    {
+        // does this key already exist
+        // unique keys that are inserted are given -1
+        // duplicate keys begin a counter for occurences at 1
+        if (names.find(i.file_name) != names.end())
+        {
+            if (names[i.file_name] == -1)
+                names[i.file_name] = 1;
+            else
+                names[i.file_name]++;
+        }
+        else
+        {
+            names[i.file_name] = -1;
+        }
+    }
+
+    // rename duplicates
+    // cue, cue, cue -> cue_0, cue_1, cue_2 ...
+    for (auto i = split_wavs.rbegin(); i != split_wavs.rend(); i++)
+    {
+        if (names[i->file_name] != -1)
+            i->file_name += "_" + std::to_string(names[i->file_name]--);
+    }
+
+    // calculate byte lengths
+    for (auto i = split_wavs.rbegin(); i != split_wavs.rend(); i++)
+    {
+        if (i == split_wavs.rbegin())
+            i->byte_length = wav.sample_size() * wav.samples.size() - i->byte_offset;
+        else
+            i->byte_length = (i - 1)->byte_offset - i->byte_offset;
+    }
+
+    // populate WAV_t objects
+    for (auto &i : split_wavs)
+    {
+        // find the correct byte sections in the source wav file
+        std::vector<uint8_t>::iterator start = wav.get_data().begin() + i.byte_offset;
+        std::vector<uint8_t>::iterator end = start + i.byte_length;
+        i.wav.get_data().assign(start, end);
+        // refresh samples vector with new raw data
+        i.wav.load_data();
+    }
+
+    for (auto &i : split_wavs)
+        printf("%s:\tbyte offset: %d,\tbyte length: %d,\tsizeof data: %d\n", i.file_name.c_str(), i.byte_offset, i.byte_length, i.wav.get_data().size());
 }
 
 void WAVsplitter::read_labl(WAV_t &wav)
@@ -13,21 +75,21 @@ void WAVsplitter::read_labl(WAV_t &wav)
     const std::vector<std::unique_ptr<RIFF_chunk_t>> &riff_lists = wav.get_riff().get_root_chunk().get_subchunks();
 
     // find all list chunks
-    for(auto &i : riff_lists)
+    for (auto &i : riff_lists)
     {
         RIFF_chunk_list_t *list = dynamic_cast<RIFF_chunk_list_t *>(i.get());
-        if(list != nullptr)
+        if (list != nullptr)
         {
             // find the list chunk with form type 'adtl' (associated data list)
-            if(strcmp(list->get_form_type(), "adtl") != 0)
+            if (strcmp(list->get_form_type(), "adtl") != 0)
                 continue;
 
             // this is the correct list chunk - find all of the 'labl' or 'note' chunks
             const std::vector<std::unique_ptr<RIFF_chunk_t>> &adtl_chunks = list->get_subchunks();
-            for(auto &j : adtl_chunks)
+            for (auto &j : adtl_chunks)
             {
                 RIFF_chunk_data_t *adtl = dynamic_cast<RIFF_chunk_data_t *>(j.get());
-                if(adtl != nullptr && (strcmp(adtl->get_identifier(), "labl") == 0 || strcmp(adtl->get_identifier(), "note") == 0))
+                if (adtl != nullptr && (strcmp(adtl->get_identifier(), "labl") == 0 || strcmp(adtl->get_identifier(), "note") == 0))
                 {
                     // this is an 'adtl' or 'note' chunk
                     uint32_t adtl_id;
@@ -121,7 +183,7 @@ const std::string &WAVsplitter::get_suffix() const
 void WAVsplitter::set_output_directory(const std::string &new_output_directory)
 {
     output_directory = new_output_directory;
-    if(*output_directory.rbegin() != '/')
+    if (*output_directory.rbegin() != '/')
         output_directory.append("/");
 }
 
