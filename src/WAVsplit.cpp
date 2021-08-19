@@ -104,6 +104,7 @@ void WAVsplitter::set_prefix(const std::string &new_prefix)
 
 const std::string &WAVsplitter::get_prefix() const
 {
+    return prefix;
 }
 
 void WAVsplitter::set_suffix(const std::string &new_suffix)
@@ -112,6 +113,7 @@ void WAVsplitter::set_suffix(const std::string &new_suffix)
 
 const std::string &WAVsplitter::get_suffix() const
 {
+    return suffix;
 }
 
 void WAVsplitter::set_output_directory(const std::string &new_output_directory)
@@ -119,16 +121,16 @@ void WAVsplitter::set_output_directory(const std::string &new_output_directory)
     output_directory = new_output_directory;
     if(*output_directory.rbegin() != '/')
         output_directory.append("/");
-
-    printf("%s\n", output_directory.c_str());
 }
 
 const std::string &WAVsplitter::get_output_directory() const
 {
+    return output_directory;
 }
 
-std::vector<splitWAV> &WAVsplitter::get_splits() const
+std::vector<splitWAV> &WAVsplitter::get_splits()
 {
+    return split_wavs;
 }
 
 void WAVsplitter::split()
