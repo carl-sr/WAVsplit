@@ -36,5 +36,37 @@ struct cue_chunk_t
 class WAVsplitter
 {
 private:
+    std::unordered_map<uint32_t, std::string> labl_identifiers;
+    cue_chunk_t cue_chunk;
+    std::vector<splitWAV> split_wavs;
+
+    std::string prefix;
+    std::string suffix;
+
+    std::string output_directory;
+
+    void read_wav(const std::string &filename);
+    void read_labl(const WAV_t &wav);
+    void read_cue(const WAV_t &wav);
+
+    void output_dir_from_filename(const std::string &filename);
+
 public:
+    WAVsplitter();
+    WAVsplitter(const std::string &filename);
+
+    void open(const std::string &filename);
+
+    void set_prefix(const std::string &new_prefix);
+    const std::string &get_prefix() const;
+
+    void set_suffix(const std::string &new_suffix);
+    const std::string &get_suffix() const;
+
+    void set_output_directory(const std::string &new_output_directory);
+    const std::string &get_output_directory() const;
+
+    std::vector<splitWAV> &get_splits() const;
+
+    void split();
 };
