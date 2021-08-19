@@ -100,6 +100,7 @@ void WAVsplitter::open(const std::string &filename)
 
 void WAVsplitter::set_prefix(const std::string &new_prefix)
 {
+    prefix = new_prefix;
 }
 
 const std::string &WAVsplitter::get_prefix() const
@@ -109,6 +110,7 @@ const std::string &WAVsplitter::get_prefix() const
 
 void WAVsplitter::set_suffix(const std::string &new_suffix)
 {
+    suffix = new_suffix;
 }
 
 const std::string &WAVsplitter::get_suffix() const
