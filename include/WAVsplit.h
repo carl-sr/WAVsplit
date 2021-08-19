@@ -39,6 +39,7 @@ private:
     std::unordered_map<uint32_t, std::string> labl_identifiers;
     cue_chunk_t cue_chunk;
     std::vector<splitWAV> split_wavs;
+    WAV_fmt_t wav_header;
 
     std::string prefix;
     std::string suffix;
