@@ -7,7 +7,8 @@ void WAVsplitter::read_wav(const std::string &filename)
     read_labl(wav);
     read_cue(wav);
 
-    // create splitWAV structs
+    wav_header = wav.header;
+    // create splitWAV structs =======================================================================================
     split_wavs.reserve(cue_chunk.data.size());
     for (auto &i : cue_chunk.data)
     {
@@ -15,10 +16,10 @@ void WAVsplitter::read_wav(const std::string &filename)
         split_wavs.push_back({labl_identifiers[i.identifier], i.sample_start});
 
         // assign header data to each WAV_t
-        wav.header = wav_header;
+        split_wavs.back().wav.header = wav_header;
     }
 
-    // find duplicate cue point names
+    // find duplicate cue point names =======================================================================================
     std::unordered_map<std::string, int> names;
     for (auto &i : split_wavs)
     {
@@ -38,7 +39,7 @@ void WAVsplitter::read_wav(const std::string &filename)
         }
     }
 
-    // rename duplicates
+    // rename duplicates =======================================================================================
     // cue, cue, cue -> cue_0, cue_1, cue_2 ...
     for (auto i = split_wavs.rbegin(); i != split_wavs.rend(); i++)
     {
@@ -46,28 +47,25 @@ void WAVsplitter::read_wav(const std::string &filename)
             i->file_name += "_" + std::to_string(names[i->file_name]--);
     }
 
-    // calculate byte lengths
+    // calculate byte lengths =======================================================================================
     for (auto i = split_wavs.rbegin(); i != split_wavs.rend(); i++)
     {
         if (i == split_wavs.rbegin())
-            i->byte_length = wav.sample_size() * wav.samples.size() - i->byte_offset;
+            i->byte_length = (wav.samples.size() / (wav_header.bits_per_sample / 8)) - i->byte_offset;
         else
             i->byte_length = (i - 1)->byte_offset - i->byte_offset;
     }
 
-    // populate WAV_t objects
+    // populate WAV_t objects =======================================================================================
     for (auto &i : split_wavs)
     {
-        // find the correct byte sections in the source wav file
-        std::vector<uint8_t>::iterator start = wav.get_data().begin() + i.byte_offset;
-        std::vector<uint8_t>::iterator end = start + i.byte_length;
-        i.wav.get_data().assign(start, end);
-        // refresh samples vector with new raw data
-        i.wav.load_data();
+        // by samples
+        std::vector<uint64_t>::iterator start = wav.samples.begin() + (i.byte_offset * wav_header.num_channels);
+        std::vector<uint64_t>::iterator end = start + (i.byte_length * wav_header.num_channels);
+        i.wav.samples.assign(start, end);
     }
-
-    for (auto &i : split_wavs)
-        printf("%s:\tbyte offset: %d,\tbyte length: %d,\tsizeof data: %d\n", i.file_name.c_str(), i.byte_offset, i.byte_length, i.wav.get_data().size());
+    // for (auto &i : split_wavs)
+    //     printf("%s:\t\tbyte offset: %d,\t\tbyte length: %d,\t\tsamples: %d\n", i.file_name.c_str(), i.byte_offset, i.byte_length, i.wav.samples.size());
 }
 
 void WAVsplitter::read_labl(WAV_t &wav)
@@ -199,4 +197,10 @@ std::vector<splitWAV> &WAVsplitter::get_splits()
 
 void WAVsplitter::split()
 {
+    // set filepaths and write
+    for (auto &i : split_wavs)
+    {
+        i.wav.set_filepath(output_directory + prefix + i.file_name + suffix + ".wav");
+        i.wav.write();
+    }
 }
