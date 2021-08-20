@@ -15,7 +15,7 @@ This will create an executable file called `wavsplit` in the `build/apps/` direc
 wavsplit file.wav
 ```
 
-`observe.wav` is a sample WAV file with cue points. Running the shell command `wavsplit observe.wav` will split the WAV data along the cue points into individual files in the observe directory.
+`observe.wav` is a sample WAV file with cue points. Running the shell command `wavsplit observe.wav` will split the WAV data along the cue points into individual files in the observe directory. Note that the `WAVsplitter` class does not create directories. The observe directory will need to be created before `observe.wav` can be split into it.
 
 Individual wav files are made based on cue points within the file. If no `cue ` chunks are found, nothing happens.
 
